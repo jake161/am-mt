@@ -1,4 +1,4 @@
-# Addative Manufacturing - Multi-Tool
+# Additive Manufacturing - Multi-Tool
 
 Current sensor loadout:
 - TMP36 Temperature sensor (for ambient)
