@@ -2,6 +2,7 @@
 
 Current sensor loadout:
 - TMP36 Temperature sensor (for ambient)
+    -  BME680?
 - Electret Microphone w/ MAX4466 Op-Amp
 
 Hardware:
