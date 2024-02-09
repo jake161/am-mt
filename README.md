@@ -1,8 +1,7 @@
 # Additive Manufacturing - Multi-Tool
 
 Current sensor loadout:
-- TMP36 Temperature sensor (for ambient)
-    -  BME680?
+- BMP280 Temperature sensor (for ambient)
 - Electret Microphone w/ MAX4466 Op-Amp
 
 Hardware:
