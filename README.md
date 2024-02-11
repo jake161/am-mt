@@ -7,7 +7,7 @@ Current sensor loadout:
 Hardware:
 - ESP32S3 XIAO
 - 3.7V 1150mAh LiPo Battery
-- 0.96" inch OLED I2C Display
+- 0.96" inch OLED I2C Display [RUNNING]
 
-Current predicted current draw: 90.11mA
-Predicted battery life: 12.75hrs
+Current predicted peak current draw: 90.11mA
+Predicted battery life: 12.75hrs (minimum)
