@@ -37,14 +37,16 @@ unsigned long interval = 150;
 int subMenuState = 0;
 
 // Flags
-#define EASTEREGGS false // Want a fun little suprise?
+#define EASTEREGGS true // Want a fun little suprise?
 #define BMP_DEBUG false
 
 // Prototypes
 
 void welcome(void);
 void menu(void);
-void subMenuCon(void);
+void menuTension(void);
+void menuAmbient(void);
+void menuCon(void);
 float tension(float, float, float);
 
 void setup()
@@ -107,7 +109,7 @@ void loop()
 {
   tNow = millis();
 
-  subMenuCon();
+  menuCon();
 }
 
 // Welcome Message
@@ -179,6 +181,11 @@ void welcome()
   delay(2000);
 }
 
+/*
+The following functions are responsible for drawing the menus and setting their state
+*/
+
+
 // Show the options menu
 void menu()
 {
@@ -197,8 +204,32 @@ void menu()
   display.display();
 }
 
-// Sub Menu Control Logic
-void subMenuCon()
+// Draw the Tension Meter Sub menu
+void menuTension(){
+    subMenuState = 1;
+    Serial.println(subMenuState);
+    display.clearDisplay();
+    display.setCursor(13, 0);
+    display.print("Measured Tension:");
+    display.setCursor(46, 20);
+    display.print(String(tension(71,0.0083,0.350))+"N"); //Place holder for analog input, add menu options to add lin_dens and belt length
+    display.display();
+}
+
+// Draw the Ambient Temp Sub menu
+void menuAmbient(){
+    subMenuState = 2;
+    Serial.println(subMenuState);
+    display.clearDisplay();
+    display.setCursor(25, 0);
+    display.print("Ambient Temp");
+    display.setCursor(52, 20);
+    display.print("nullC"); //Place holder for temp reading
+    display.display();
+}
+
+// Sub Menu Control Logic, handles navigating and re-drawing the menus
+void menuCon()
 {
 
   switch (subMenuState)
@@ -250,15 +281,9 @@ void subMenuCon()
     }
     break;
 
-  case 1:
-    subMenuState = 1;
-    Serial.println(subMenuState);
-    display.clearDisplay();
-    display.setCursor(13, 0);
-    display.print("Measured Tension:");
-    display.setCursor(46, 20);
-    display.print(String(tension(71,0.0083,0.350))+"N"); //Place holder for analog input, add menu options to add lin_dens and belt length
-    display.display();
+  case 1: // Eureka!! I think I can steal the control logic from above and dump it into the other submenu cases. If thats the case, functions for each menu make sense.
+    
+    menuTension();
 
     if ((tNow - tLast) >= interval)
     {
@@ -271,12 +296,8 @@ void subMenuCon()
     break;
 
   case 2:
-    subMenuState = 2;
-    Serial.println(subMenuState);
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println("Ambient Temp");
-    display.display();
+  
+    menuAmbient();
 
     if ((tNow - tLast) >= interval)
     {
@@ -289,6 +310,11 @@ void subMenuCon()
     break;
   }
 }
+
+/*
+The following functions perform arithmatic on sensor data
+*/
+
 // Calculates belt tension from frequency and linear density
 float tension(float freq, float mu, float len)
 {
