@@ -6,6 +6,7 @@
 #include <Adafruit_BMP280.h>
 
 // Screen Setup
+
 #define SCREEN_WIDTH 128    // OLED display width, in pixels
 #define SCREEN_HEIGHT 32    // OLED display height, in pixels
 #define OLED_RESET -1       // Reset pin # (or -1 if sharing Arduino reset pin)
@@ -13,19 +14,42 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Temp BMP280 Setup
+
 Adafruit_BMP280 bmp; // I2C
 
 // Mic Setup
+
 static const uint8_t micPin = A2;
 
-#define EASTEREGGS true // Want a fun little suprise?
+// Button Inputs
+
+static const uint8_t but_u = D8;
+static const uint8_t but_m = D9;
+static const uint8_t but_d = D10;
+
+int curPos[2] = {120, 10};
+
+unsigned long tNow, tLast;
+unsigned long interval = 75;
+
+// Flags
+#define EASTEREGGS false // Want a fun little suprise?
 #define BMP_DEBUG false
 
-void welcome(void); // welcome message prototype
+// Prototypes
+
+void welcome(void);
+void menu(void);
+void updateCur(void);
+float tension(float, float, float);
 
 void setup()
 {
   Serial.begin(9600);
+
+  pinMode(but_u, INPUT_PULLUP);
+  pinMode(but_m, INPUT_PULLUP);
+  pinMode(but_d, INPUT_PULLUP);
 
   if (BMP_DEBUG == true)
   {
@@ -72,15 +96,18 @@ void setup()
   }
 
   welcome();
+  menu();
 }
 
 void loop()
 {
+  tNow = millis();
+  updateCur();
 }
 
-void welcome() // Welcome Message
+// Welcome Message
+void welcome()
 {
-
   display.clearDisplay();
 
   display.setTextSize(2); // Draw 2X-scale text
@@ -141,8 +168,66 @@ void welcome() // Welcome Message
   display.clearDisplay();
   display.setTextSize(2);
   display.println(F("AM-MT"));
-  display.setTextSize(0);
-  display.print(F(" Additive Manufctrng\n      Multi-Tool"));
+  display.setTextSize(1);
+  display.print(F(" Additive Manufctrng\n      Multi-Tool")); // Add a glitching text animation for EASTEREGGS
   display.display();
   delay(2000);
+}
+
+// Show the options menu
+void menu()
+{
+  display.setCursor(43, 0);
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.println(F("OPTIONS"));
+  display.display();
+  display.setCursor(0, 10);
+  display.print(F("Tension Meter"));
+  display.setCursor(0, 20);
+  display.print(F("Ambient Temp"));
+  display.setCursor(curPos[0], curPos[1]);
+  display.print("<");
+  display.display();
+}
+
+void updateCur()
+{
+
+  if ((tNow - tLast) >= interval)
+  {
+    //If sitting for too long, add goofy animation to EASTEREGGS
+    tLast = tNow;
+    if (digitalRead(but_d) == LOW)
+    {
+      if (curPos[1] + 10 <= 20 && curPos[1] != 20)
+      {
+        Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        curPos[1] = curPos[1] + 10;
+        Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        Serial.println();
+        menu();
+      }
+    }
+
+    if (digitalRead(but_u) == LOW)
+    {
+      if (curPos[1] - 10 >= 10 && curPos[1] != 10)
+      {
+        Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        curPos[1] = curPos[1] - 10;
+        Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        Serial.println();
+        menu();
+      }
+    }
+  }
+}
+
+// Calculates belt tension from frequency and linear density
+float tension(float freq, float mu, float len)
+{
+  float tension = mu * pow(2.0 * len * freq, 2);
+
+  return tension;
 }
