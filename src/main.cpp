@@ -30,7 +30,11 @@ static const uint8_t but_d = D10;
 int curPos[2] = {120, 10};
 
 unsigned long tNow, tLast;
-unsigned long interval = 75;
+unsigned long interval = 150;
+
+// Sub-Menu Logic
+
+int subMenuState = 0;
 
 // Flags
 #define EASTEREGGS false // Want a fun little suprise?
@@ -40,7 +44,7 @@ unsigned long interval = 75;
 
 void welcome(void);
 void menu(void);
-void updateCur(void);
+void subMenuCon(void);
 float tension(float, float, float);
 
 void setup()
@@ -102,7 +106,8 @@ void setup()
 void loop()
 {
   tNow = millis();
-  updateCur();
+
+  subMenuCon();
 }
 
 // Welcome Message
@@ -177,11 +182,12 @@ void welcome()
 // Show the options menu
 void menu()
 {
-  display.setCursor(43, 0);
+  subMenuState = 0;
+  Serial.println(subMenuState);
   display.clearDisplay();
+  display.setCursor(43, 0);
   display.setTextSize(1);
   display.println(F("OPTIONS"));
-  display.display();
   display.setCursor(0, 10);
   display.print(F("Tension Meter"));
   display.setCursor(0, 20);
@@ -191,39 +197,98 @@ void menu()
   display.display();
 }
 
-void updateCur()
+// Sub Menu Control Logic
+void subMenuCon()
 {
 
-  if ((tNow - tLast) >= interval)
+  switch (subMenuState)
   {
-    //If sitting for too long, add goofy animation to EASTEREGGS
-    tLast = tNow;
-    if (digitalRead(but_d) == LOW)
-    {
-      if (curPos[1] + 10 <= 20 && curPos[1] != 20)
-      {
-        //Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-        curPos[1] = curPos[1] + 10;
-        //Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-        //Serial.println();
-        menu();
-      }
-    }
+  case 0:
+    // So here's the thing... this logic works well. It will need to be implemented for the other submenus... but I'm not sure how to effectively do that yet lol
+    // Also... I don't think this method is extensible to overflow options. ie... don't base your choice off cursor position exactly?
 
-    if (digitalRead(but_u) == LOW)
+    if ((tNow - tLast) >= interval)
     {
-      if (curPos[1] - 10 >= 10 && curPos[1] != 10)
+      // If sitting for too long, add goofy animation to EASTEREGGS
+      tLast = tNow;
+      if (digitalRead(but_d) == LOW)
       {
-        //Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-        curPos[1] = curPos[1] - 10;
-        //Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-        //Serial.println();
-        menu();
+        if (curPos[1] + 10 <= 20 && curPos[1] != 20)
+        {
+          // Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+          curPos[1] = curPos[1] + 10;
+          // Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+          // Serial.println();
+          menu();
+        }
+      }
+
+      if (digitalRead(but_u) == LOW)
+      {
+        if (curPos[1] - 10 >= 10 && curPos[1] != 10)
+        {
+          // Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+          curPos[1] = curPos[1] - 10;
+          // Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+          // Serial.println();
+          menu();
+        }
+      }
+
+      if (digitalRead(but_m) == LOW)
+      {
+        if (curPos[1] == 10)
+        {
+          subMenuState = 1;
+        }
+
+        if (curPos[1] == 20)
+        {
+          subMenuState = 2;
+        }
       }
     }
+    break;
+
+  case 1:
+    subMenuState = 1;
+    Serial.println(subMenuState);
+    display.clearDisplay();
+    display.setCursor(13, 0);
+    display.print("Measured Tension:");
+    display.setCursor(46, 20);
+    display.print(String(tension(71,0.0083,0.350))+"N"); //Place holder for analog input, add menu options to add lin_dens and belt length
+    display.display();
+
+    if ((tNow - tLast) >= interval)
+    {
+      tLast = tNow;
+      if (digitalRead(but_m) == LOW) // Debounce this
+      {
+        menu(); // sends back to main menu
+      }
+    }
+    break;
+
+  case 2:
+    subMenuState = 2;
+    Serial.println(subMenuState);
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Ambient Temp");
+    display.display();
+
+    if ((tNow - tLast) >= interval)
+    {
+      tLast = tNow;
+      if (digitalRead(but_m) == LOW) // Debounce this
+      {
+        menu(); // sends back to main menu
+      }
+    }
+    break;
   }
 }
-
 // Calculates belt tension from frequency and linear density
 float tension(float freq, float mu, float len)
 {
