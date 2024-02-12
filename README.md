@@ -2,7 +2,7 @@
 
 Current sensor loadout:
 - BMP280 Temperature sensor (for ambient)
-- Electret Microphone w/ MAX4466 Op-Amp
+- ADA1713 (microphone and op-amp)
 
 Hardware:
 - ESP32S3 XIAO
@@ -12,6 +12,7 @@ Hardware:
 Potential Addons:
 - RTC
 - Curent and voltage measurement
+- RH (Temporarily DHT-11)
 
 Current predicted peak current draw: 90.11mA
 Predicted battery life: 15hrs (minimum)

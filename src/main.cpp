@@ -281,7 +281,7 @@ void menuCon()
     }
     break;
 
-  case 1: // Eureka!! I think I can steal the control logic from above and dump it into the other submenu cases. If thats the case, functions for each menu make sense.
+  case 1: // I think I can steal the control logic from above and dump it into the other submenu cases. If thats the case, functions for each menu make sense.
     
     menuTension();
 
