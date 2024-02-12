@@ -202,10 +202,10 @@ void updateCur()
     {
       if (curPos[1] + 10 <= 20 && curPos[1] != 20)
       {
-        Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        //Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
         curPos[1] = curPos[1] + 10;
-        Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-        Serial.println();
+        //Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        //Serial.println();
         menu();
       }
     }
@@ -214,10 +214,10 @@ void updateCur()
     {
       if (curPos[1] - 10 >= 10 && curPos[1] != 10)
       {
-        Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        //Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
         curPos[1] = curPos[1] - 10;
-        Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-        Serial.println();
+        //Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
+        //Serial.println();
         menu();
       }
     }
