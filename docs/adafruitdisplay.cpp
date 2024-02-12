@@ -17,7 +17,7 @@
  All text above, and the splash screen below must be
  included in any redistribution.
  **************************************************************************/
-
+// This is a modified version of their demo code. Moved function definitions to the beginning of the program for compatability with the compiler.
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
