@@ -9,6 +9,10 @@ Hardware:
 - 3.7V 1500mAh LiPo Battery
 - 0.96" inch OLED I2C Display [RUNNING]
 
+Potential Frequency Analyzing Algos:
+- (Goertzel Filter)[https://github.com/jacobrosenthal/Goertzel/blob/master/Goertzel.cpp]
+- (Fast Hartley Transform)[https://miscircuitos.com/frequency-detection-arduino/]
+
 Potential Addons:
 - RTC
 - Curent and voltage measurement

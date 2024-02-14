@@ -110,6 +110,7 @@ void loop()
   tNow = millis();
 
   menuCon();
+  Serial.println(analogRead(micPin));
 }
 
 // Welcome Message
