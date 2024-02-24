@@ -5,33 +5,16 @@ Menus.h - Library for abstracting the drawing process (This doesn't work yet lol
 */
 
 #include "Arduino.h"
+#include "Adafruit_GFX.h"
+#include "Adafruit_SSD1306.h"
 #include "Menus.h"
 
-Menus::ServoStep(int pin){
-    _pin=pin;
-    ledcSetup(0,200,8);
-    ledcAttachPin(_pin,0);
-    
-}
-
-void ServoStep::servoSet(int angle){
-    duty=(map(angle,0,180,5,25))*5.1;
-    //5.1 is the ratio of pulse width (in decimilliseconds)to duty cycle at a fequency of 200Hz (the minimum for ledc on esp32c3)
-    ledcWrite(0,duty);//write to servo
-    delay(300);
-
-}
-
-void ServoStep::servoUp(){
-    ledcWrite(0,77); //90degress
-    ledcWrite(0,128);//180 degrees
-    delay(300);
-    ledcWrite(0,77);//90 degrees
-}
-
-void ServoStep::servoDown(){
-    ledcWrite(0,77); //90degress
-    ledcWrite(0,26);//0 degrees
-    delay(300);
-    ledcWrite(0,77);//90 degrees
+Menus::Menus(int SCREEN_WIDTH, int SCREEN_HEIGHT, int OLED_RESET, int SCREEN_ADDRESS, int bu, int bm, int bd)
+{
+    Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+    curPos[0]=120;
+    curPos[1]=10;
+    _but_u=bu;
+    _but_m=bm;
+    _but_d=bd;
 }

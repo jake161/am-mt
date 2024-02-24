@@ -20,3 +20,8 @@ Potential Addons:
 
 Current predicted peak current draw: 90.11mA
 Predicted battery life: 15hrs (minimum)
+
+### ToDo:
+1. Seperate functions into seperate files
+2. Filtering of requency data
+3. Data collection

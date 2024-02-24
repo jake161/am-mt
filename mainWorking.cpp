@@ -43,7 +43,7 @@ int subMenuState = 0;
 // Prototypes
 
 void welcome(void);
-void menu(void);
+void menuMain(void);
 void menuTension(void);
 void menuAmbient(void);
 void menuCon(void);
@@ -102,7 +102,7 @@ void setup()
   }
 
   welcome();
-  menu();
+  menuMain();
 }
 
 void loop()
@@ -188,7 +188,7 @@ The following functions are responsible for drawing the menus and setting their 
 
 
 // Show the options menu
-void menu()
+void menuMain()
 {
   subMenuState = 0;
   Serial.println(subMenuState);
@@ -251,7 +251,7 @@ void menuCon()
           curPos[1] = curPos[1] + 10;
           // Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
           // Serial.println();
-          menu();
+          menuMain();
         }
       }
 
@@ -263,7 +263,7 @@ void menuCon()
           curPos[1] = curPos[1] - 10;
           // Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
           // Serial.println();
-          menu();
+          menuMain();
         }
       }
 
@@ -291,7 +291,7 @@ void menuCon()
       tLast = tNow;
       if (digitalRead(but_m) == LOW) // Debounce this
       {
-        menu(); // sends back to main menu
+        menuMain(); // sends back to main menu
       }
     }
     break;
@@ -305,7 +305,7 @@ void menuCon()
       tLast = tNow;
       if (digitalRead(but_m) == LOW) // Debounce this
       {
-        menu(); // sends back to main menu
+        menuMain(); // sends back to main menu
       }
     }
     break;
