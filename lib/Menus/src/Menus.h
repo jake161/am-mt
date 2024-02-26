@@ -13,7 +13,7 @@ Menus.h - Library for simplifying local servo commands
 class Menus
 {
 public:
-    Menus(int SCREEN_WIDTH, int SCREEN_HEIGHT, int OLED_RESET, int SCREEN_ADDRESS, int bu, int bm, int bd);
+    Menus(int bu, int bm, int bd, bool egs,long debounce);
 
 public:
     void welcome(void);
@@ -21,12 +21,18 @@ public:
     void menuTension(void);
     void menuAmbient(void);
     void menuCon(void);
+    float tension(float, float, float);
+    int subMenuState;
+    int curPos[2];
+    unsigned long tNow;
 
 private:
-    int curPos[2];
     int _but_u;
     int _but_m;
     int _but_d;
+    bool EASTEREGGS;
+    unsigned long tLast;
+    unsigned long interval;
 
 };
 
