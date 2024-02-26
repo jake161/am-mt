@@ -17,6 +17,7 @@ static const uint8_t but_d = D10;
 // Screen Setup
 Menus myMenu(but_u,but_m,but_d,EASTEREGGS,150);
 
+// test myTest;
 // Temp BMP280 Setup
 Adafruit_BMP280 bmp; // I2C
 
@@ -25,6 +26,8 @@ static const uint8_t micPin = A2;
 
 void setup()
 {
+  Serial.begin(9600);
+
   if (BMP_DEBUG == true)
   {
     while (!Serial)

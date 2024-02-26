@@ -37,7 +37,7 @@ unsigned long interval = 150;
 int subMenuState = 0;
 
 // Flags
-#define EASTEREGGS true // Want a fun little suprise?
+#define EASTEREGGS false // Want a fun little suprise?
 #define BMP_DEBUG false
 
 // Prototypes

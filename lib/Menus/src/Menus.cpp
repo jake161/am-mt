@@ -31,16 +31,16 @@ Menus::Menus(int bu, int bm, int bd, bool egs, long debounce)
     pinMode(_but_d, INPUT_PULLUP);
     EASTEREGGS = egs;
 
-    // Screen Begin
-    // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-    Serial.begin(9600);
+    // // Screen Begin
+    // // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+    // Serial.begin(9600);
 
-    if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
-    {
-        Serial.println(F("SSD1306 allocation failed"));
-        for (;;)
-            ; // Don't proceed, loop forever
-    }
+    // if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
+    // {
+    //     Serial.println(F("SSD1306 allocation failed"));
+    //     for (;;)
+    //         ; // Don't proceed, loop forever
+    // }
 }
 
 void Menus::welcome(void)
@@ -139,7 +139,7 @@ void Menus::menuTension()
     display.setCursor(13, 0);
     display.print("Measured Tension:");
     display.setCursor(46, 20);
-    display.print(String(tension(71, 0.0083, 0.350)) + "N"); // Place holder for analog input, add menu options to add lin_dens and belt length
+    display.print(String(tension(frequency, linDen, beltLen)) + "N"); // Place holder for analog input, add menu options to add lin_dens and belt length
     display.display();
 }
 

@@ -25,6 +25,7 @@ public:
     int subMenuState;
     int curPos[2];
     unsigned long tNow;
+    float frequency,linDen,beltLen;
 
 private:
     int _but_u;
@@ -35,5 +36,11 @@ private:
     unsigned long interval;
 
 };
+
+// class test
+// {
+// public:
+//     int hello;
+// };
 
 #endif
