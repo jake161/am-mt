@@ -3,18 +3,15 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_BMP280.h>
+#include <MPU6050.h>
 
 // Screen Setup
 
-#define SCREEN_WIDTH 128    // OLED display width, in pixels
-#define SCREEN_HEIGHT 32    // OLED display height, in pixels
-#define OLED_RESET -1       // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+#define SCREEN_WIDTH 128                        // OLED display width, in pixels
+#define SCREEN_HEIGHT 32                        // OLED display height, in pixels
+#define OLED_RESET -1                           // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C                     ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-// Temp BMP280 Setup
-
-Adafruit_BMP280 bmp; // I2C
 
 // Mic Setup
 #define MIC_PIN             A2                  // Analog pin connected to the microphone
@@ -22,11 +19,13 @@ Adafruit_BMP280 bmp; // I2C
 #define NUM_SAMPLES         2048                // Number of samples to process for frequency estimation
 #define SAMPLE_DELAY_US     (1000000 / SAMPLE_RATE) // Delay between samples in microseconds
 #define DC_OFFSET           1650                // Analog voltage offset to center at 0, NEEDS TUNING
-// Number of previous frequency values to average
-#define NUM_VALUES_TO_AVERAGE 5
+#define NUM_VALUES_TO_AVERAGE 5                 // Number of previous frequency values to average
+
+// Acceleration Sensor Setup
+MPU6050 accel;
+float accelXg, accelYg, accelZg;
 
 // Button Inputs
-
 static const uint8_t but_u = D8;
 static const uint8_t but_m = D9;
 static const uint8_t but_d = D10;
@@ -37,15 +36,16 @@ unsigned long tNow, tLast;
 unsigned long interval = 150;
 
 // Sub-Menu Logic
-
 int subMenuState = 0;
+int lastButtonState_d = HIGH;
+int lastButtonState_u = HIGH;
+int lastButtonState_m = HIGH;
 
 // Flags
-#define EASTEREGGS false // Want a fun little suprise?
-#define BMP_DEBUG false
+#define EASTEREGGS true                         // Want a fun little suprise?
+
 
 // Prototypes
-
 void welcome(void);
 void menuMain(void);
 void menuTension(void);
@@ -53,59 +53,32 @@ void menuAmbient(void);
 void menuCon(void);
 float tension(float, float, float);
 float processAudio();
+void getAccelCorrected();
 
 void setup()
 {
   Serial.begin(9600);
 
+  // Temp Sensor Begin
+  // dht.begin();
+
+  // Button Inputs
   pinMode(but_u, INPUT_PULLUP);
   pinMode(but_m, INPUT_PULLUP);
   pinMode(but_d, INPUT_PULLUP);
 
-  if (BMP_DEBUG == true)
-  {
-    while (!Serial)
-      delay(100); // wait for native usb, not sure if I'll keep this in final implementation
-    Serial.println(F("BMP280 test"));
-  }
+  // Accelerometer Begin
+  Wire.begin(); // Start the wire libary (used by the accelerometer)
+  accel.initialize();      // Initialize the accelerometer
+  accel.CalibrateAccel(6); // Calibrate the accelerometer with 6 loops
 
   // Screen Begin
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
-  {
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)){ // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
     Serial.println(F("SSD1306 allocation failed"));
-    for (;;)
-      ; // Don't proceed, loop forever
+    for (;;); // Don't proceed, loop forever, if this breaks move semicolon down a line
   }
 
-  if (BMP_DEBUG == true)
-  {
-    // BMP280 Begin
-    unsigned status;
-    // status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
-    status = bmp.begin();
-    if (!status)
-    {
-      Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
-                       "try a different address!"));
-      Serial.print("SensorID was: 0x");
-      Serial.println(bmp.sensorID(), 16);
-      Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-      Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-      Serial.print("        ID of 0x60 represents a BME 280.\n");
-      Serial.print("        ID of 0x61 represents a BME 680.\n");
-      while (1)
-        delay(10);
-    }
-
-    /* Default settings from datasheet. */
-    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
-                    Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                    Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
-                    Adafruit_BMP280::FILTER_X16,      /* Filtering. */
-                    Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
-  }
-
+  // Call menu welcom screen
   welcome();
   menuMain();
 }
@@ -113,10 +86,14 @@ void setup()
 void loop()
 {
   tNow = millis();
-
   menuCon();
-  Serial.println(analogRead(MIC_PIN));
 }
+
+////////////////////////////////////////
+//                                    //
+//        ADDITIONAL FUNCTIONS        //
+//                                    //
+////////////////////////////////////////
 
 // Welcome Message
 void welcome()
@@ -196,7 +173,7 @@ The following functions are responsible for drawing the menus and setting their 
 void menuMain()
 {
   subMenuState = 0;
-  Serial.println(subMenuState);
+  //Serial.println(subMenuState);
   display.clearDisplay();
   display.setCursor(43, 0);
   display.setTextSize(1);
@@ -204,7 +181,7 @@ void menuMain()
   display.setCursor(0, 10);
   display.print(F("Tension Meter"));
   display.setCursor(0, 20);
-  display.print(F("Ambient Temp"));
+  display.print(F("Acceleration"));
   display.setCursor(curPos[0], curPos[1]);
   display.print("<");
   display.display();
@@ -213,24 +190,31 @@ void menuMain()
 // Draw the Tension Meter Sub menu
 void menuTension(){
     subMenuState = 1;
-    Serial.println(subMenuState);
+    //Serial.println(subMenuState);
     display.clearDisplay();
     display.setCursor(13, 0);
-    display.print("Measured Tension:");
+    display.print("Measured Tension");
     display.setCursor(46, 20);
-    display.print(String(tension(processAudio(),0.0083,0.350))+"N"); //Place holder for analog input, add menu options to add lin_dens and belt length
+    display.print(String(tension(processAudio(),0.0083,0.350))+"N"); //Calculate tension from analog audio input
     display.display();
 }
 
 // Draw the Ambient Temp Sub menu
 void menuAmbient(){
     subMenuState = 2;
-    Serial.println(subMenuState);
+    //Serial.println(subMenuState);
     display.clearDisplay();
     display.setCursor(25, 0);
-    display.print("Ambient Temp");
-    display.setCursor(52, 20);
-    display.print("nullC"); //Place holder for temp reading
+    display.print("Acceleration");
+    if ((tNow - tLast) >= interval){
+      getAccelCorrected();
+    }
+    display.setCursor(0, 12);
+    display.print("X:"+String(abs(accelXg))+"Gs"); // Get acceleration values from MPU6050 in mm/s^2
+    display.setCursor(60, 12);
+    display.print("Y:"+String(abs(accelYg))+"Gs");
+    display.setCursor(0, 25);
+    display.print("Z:"+String(abs(accelZg))+"Gs");
     display.display();
 }
 
@@ -241,38 +225,39 @@ void menuCon()
   switch (subMenuState)
   {
   case 0:
-    // So here's the thing... this logic works well. It will need to be implemented for the other submenus... but I'm not sure how to effectively do that yet lol
-    // Also... I don't think this method is extensible to overflow options. ie... don't base your choice off cursor position exactly?
-
     if ((tNow - tLast) >= interval)
     {
-      // If sitting for too long, add goofy animation to EASTEREGGS
+      int buttonState_d = digitalRead(but_d);
+      int buttonState_u = digitalRead(but_u);
+      int buttonState_m = digitalRead(but_m);
+
+      if (buttonState_d == lastButtonState_d && buttonState_u == lastButtonState_u && buttonState_m == lastButtonState_m)
+      {
+        // The button state hasn't changed, so don't proceed
+        return;
+      }
+
       tLast = tNow;
-      if (digitalRead(but_d) == LOW)
+
+      if (buttonState_d == LOW)
       {
         if (curPos[1] + 10 <= 20 && curPos[1] != 20)
         {
-          // Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
           curPos[1] = curPos[1] + 10;
-          // Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-          // Serial.println();
           menuMain();
         }
       }
 
-      if (digitalRead(but_u) == LOW)
+      if (buttonState_u == LOW)
       {
         if (curPos[1] - 10 >= 10 && curPos[1] != 10)
         {
-          // Serial.println("UPDATING CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
           curPos[1] = curPos[1] - 10;
-          // Serial.println("NEW CURSOR POS @ X:" + String(curPos[0]) + " Y:" + String(curPos[1]));
-          // Serial.println();
           menuMain();
         }
       }
 
-      if (digitalRead(but_m) == LOW)
+      if (buttonState_m == LOW)
       {
         if (curPos[1] == 10)
         {
@@ -284,6 +269,10 @@ void menuCon()
           subMenuState = 2;
         }
       }
+
+      lastButtonState_d = buttonState_d;
+      lastButtonState_u = buttonState_u;
+      lastButtonState_m = buttonState_m;
     }
     break;
 
@@ -293,7 +282,13 @@ void menuCon()
 
     if ((tNow - tLast) >= interval)
     {
+      int buttonState = digitalRead(but_m);
+      if (buttonState == lastButtonState_m){
+        return;
+      }
+
       tLast = tNow;
+      lastButtonState_m = buttonState;
       if (digitalRead(but_m) == LOW) // Debounce this
       {
         menuMain(); // sends back to main menu
@@ -302,12 +297,19 @@ void menuCon()
     break;
 
   case 2:
-  
+
     menuAmbient();
 
     if ((tNow - tLast) >= interval)
     {
+      int buttonState = digitalRead(but_m);
+      if (buttonState == lastButtonState_m)
+      {
+        return;
+      }
+
       tLast = tNow;
+      lastButtonState_m = buttonState;
       if (digitalRead(but_m) == LOW) // Debounce this
       {
         menuMain(); // sends back to main menu
@@ -366,7 +368,7 @@ float processAudio() {
         frequency = 0; // Default to 0 if no crossings
     }
 
-    // Store current frequency value in the array
+    // Store current frequency values
     previous_values[index] = frequency;
     index = (index + 1) % NUM_VALUES_TO_AVERAGE;
 
@@ -379,4 +381,12 @@ float processAudio() {
 
     // Output the dominant frequency
     return average_frequency;
+}
+
+void getAccelCorrected() { // Provide this portion of the code to the students.
+  int16_t ax, ay, az; // Initialize acceleration variables in the different axes. "int16_t" means 16-bit integer.
+  accel.getAcceleration(&ax, &ay, &az); // Get axis acceleration values.
+  accelXg = float(ax) / 8192 /2 ; // Conversion to g's.
+  accelYg = float(ay) / 8192 /2; // Conversion to g's.
+  accelZg = float(az) / 8192 /2 ; // Conversion to g's.
 }

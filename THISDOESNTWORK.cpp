@@ -1,76 +1,37 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_BMP280.h>
-#include <Menus.h>
+#include "MPU6050.h" // Search "MPU6050" in library manager and select the one by Electronic Cats.
+#include "Wire.h"
+MPU6050 accel;
 
-// Debug and such
-#define EASTEREGGS true // Want a fun little suprise?
-#define BMP_DEBUG false
+float accelXg, accelYg, accelZg; // Define the acceleration variables for each axis in g's.
 
-// Button Inputs
-static const uint8_t but_u = D8;
-static const uint8_t but_m = D9;
-static const uint8_t but_d = D10;
+void getAccelCorrected();
 
+// Define other needed variables here:
 
-// Screen Setup
-Menus myMenu(but_u,but_m,but_d,EASTEREGGS,150);
+void setup() {
 
-// test myTest;
-// Temp BMP280 Setup
-Adafruit_BMP280 bmp; // I2C
+  // Initialize Accelerometer
+  Wire.begin(); // Start the wire libary (used by the accelerometer)
+  Serial.begin(115200); // Start serial at 115200 baud
+  accel.initialize(); // Initialize the accelerometer (with range +/- 2g)
+  accel.CalibrateAccel(6); // Calibrate the accelerometer with 6 loops
 
-// Mic Setup
-static const uint8_t micPin = A2;
-
-void setup()
-{
-  Serial.begin(9600);
-
-  if (BMP_DEBUG == true)
-  {
-    while (!Serial)
-      delay(100); // wait for native usb, not sure if I'll keep this in final implementation
-    Serial.println(F("BMP280 test"));
-  }
-
-  if (BMP_DEBUG == true)
-  {
-    // BMP280 Begin
-    unsigned status;
-    // status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
-    status = bmp.begin();
-    if (!status)
-    {
-      Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
-                       "try a different address!"));
-      Serial.print("SensorID was: 0x");
-      Serial.println(bmp.sensorID(), 16);
-      Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-      Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-      Serial.print("        ID of 0x60 represents a BME 280.\n");
-      Serial.print("        ID of 0x61 represents a BME 680.\n");
-      while (1)
-        delay(10);
-    }
-
-    /* Default settings from datasheet. */
-    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
-                    Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                    Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
-                    Adafruit_BMP280::FILTER_X16,      /* Filtering. */
-                    Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
-  }
-
-  myMenu.welcome();
-  myMenu.menuMain();
+  // Print data headers if desired here:
 }
 
-void loop()
-{
-  myMenu.tNow = millis();
+void loop() {
+  getAccelCorrected(); // Function that will update the variables accelXg, accelYg, and accelZg. See function at the end of the code for details.
+  Serial.println(accelXg); // Print the acceleration in the x-axis in g's.
+  delay(100); // Delay for 100 ms.
 
-  myMenu.menuCon();
-  Serial.println(analogRead(micPin));
+}
+
+// DO NOT TOUCH THE CODE BELOW
+void getAccelCorrected() { // Provide this portion of the code to the students.
+  int16_t ax, ay, az; // Initialize acceleration variables in the different axes. "int16_t" means 16-bit integer.
+  accel.getAcceleration(&ax, &ay, &az); // Get axis acceleration values.
+  accelXg = float(ax) / 8192 /2 ; // Conversion to g's.
+  accelYg = float(ay) / 8192 /2; // Conversion to g's.
+  accelZg = float(az) / 8192 /2 ; // Conversion to g's.
 }
