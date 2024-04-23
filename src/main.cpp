@@ -3,6 +3,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <MPU6050.h>
+#include <arduinoFFT.h>
 
 // Screen Setup
 #define SCREEN_WIDTH 128                        // OLED display width, in pixels
@@ -12,19 +13,30 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Mic Setup
-#define MIC_PIN             A2                  // Analog pin connected to the microphone
-#define SAMPLE_RATE         44100               // Audio sample rate in Hz
-#define NUM_SAMPLES         2048                // Number of samples to process for frequency estimation
-#define SAMPLE_DELAY_US     (1000000 / SAMPLE_RATE) // Delay between samples in microseconds
-#define DC_OFFSET           1650                // Analog voltage offset to center at 0, NEEDS TUNING
-#define NUM_VALUES_TO_AVERAGE 5                 // Number of previous frequency values to average
+#define SAMPLES 128
+#define SAMPLING_FREQUENCY 2048
+#define VOLT_OFFSET 250
+#define MIC_PIN A2
+
+unsigned int samplingPeriod;
+unsigned long microSeconds;
+
+double vReal[SAMPLES];
+double vImag[SAMPLES];
+
+ArduinoFFT<double> FFT = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
+
+unsigned long prevTime = 0;
+float timeDiff = 0;
+float timeConst = 10;
+float timeConst2 = 100;
+float alpha = 0;
+float data = 0;
+float filtered = 0;
 
 // Acceleration Sensor Setup
 MPU6050 accel;
 float accelXg, accelYg, accelZg;
-
-float alpha = 1; // This is the smoothing factor, adjust it to your needs
-float lastOutput = 0.0; // This will hold the last output value
 
 // Button Inputs
 static const uint8_t but_u = D8;
@@ -53,12 +65,14 @@ void menuTension(void);
 void menuAmbient(void);
 void menuCon(void);
 float tension(float, float, float);
-float processAudio();
 void getAccelCorrected();
-float lowPassFilter(float);
+double getDominantFrequency();
 
 void setup()
 {
+
+  // Mic Setup
+  samplingPeriod = round(1000000*(1.0/SAMPLING_FREQUENCY));
 
   // Button Inputs
   pinMode(but_u, INPUT_PULLUP);
@@ -192,15 +206,19 @@ void menuTension(){
     display.clearDisplay();
     display.setCursor(13, 0);
     display.print("Measured Tension");
-    display.setCursor(46, 20);
-    float ten=lowPassFilter(tension(processAudio(),0.0083,0.350));
+    display.setCursor(46, 12);
+    float freq=getDominantFrequency();
+    float ten=tension(freq,0.0083,0.350);
     if (ten>1000){
-      display.setCursor(10, 20);
+      display.setCursor(10, 12);
       display.print("Freq out of Range");
     }
     else {
       //Calculate tension from analog audio input
       display.print(String(ten)+"N");
+      display.setCursor(46, 20);
+      display.print(String(freq)+"Hz");
+
     }
      
     display.display();
@@ -338,68 +356,45 @@ float tension(float freq, float mu, float len)
   return tension;
 }
 
-float processAudio() {
-    unsigned long last_crossing_time = 0;
-    unsigned long crossings = 0;
+void getAccelCorrected() {
+    int16_t ax, ay, az;
+    accel.getAcceleration(&ax, &ay, &az);
 
-    // Array to store previous frequency values for averaging
-    float previous_values[NUM_VALUES_TO_AVERAGE] = {0};
-    int index = 0;
+    timeDiff = micros() - prevTime;
+    prevTime = micros();
+    alpha = timeDiff / (timeConst2 + timeDiff);
 
-    // Collect audio samples
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        int sample = analogRead(MIC_PIN) - DC_OFFSET; // Read analog input and center around 0
+    float rawAccelXg = float(ax) / 8192 /2 ;
+    float rawAccelYg = float(ay) / 8192 /2;
+    float rawAccelZg = float(az) / 8192 /2 ;
 
-        // Check for zero-crossings
-        if (i > 0 && sample * (analogRead(MIC_PIN) - DC_OFFSET) < 0) {
-            if (last_crossing_time != 0) {
-                unsigned long current_time = micros();
-                unsigned long period = current_time - last_crossing_time;
-                crossings++;
+    accelXg = accelXg + alpha * (rawAccelXg - accelXg);
+    accelYg = accelYg + alpha * (rawAccelYg - accelYg);
+    accelZg = accelZg + alpha * (rawAccelZg - accelZg);
+}
 
-                last_crossing_time = current_time;
-            } else {
-                last_crossing_time = micros();
-            }
+double getDominantFrequency() {
+    for(int i=0; i<SAMPLES; i++) {
+        microSeconds = micros();
+
+        timeDiff = micros() - prevTime;
+        prevTime = micros();
+        alpha = timeDiff / (timeConst + timeDiff);
+        data = analogRead(MIC_PIN) - VOLT_OFFSET;
+        filtered = filtered + alpha * (data - filtered);
+
+        vReal[i] = filtered;
+        vImag[i] = 0;
+
+        while(micros() < (microSeconds + samplingPeriod)) {
+            //do nothing
         }
-
-        delayMicroseconds(SAMPLE_DELAY_US); // Adjusted delay between samples
     }
 
-    // Calculate frequency based on zero-crossings
-    float frequency;
-    if (crossings > 0) {
-        // Convert crossings to Hz
-        frequency = (float)crossings * 1000000 / (NUM_SAMPLES * SAMPLE_DELAY_US);
-    } else {
-        frequency = 0; // Default to 0 if no crossings
-    }
+    FFT.windowing(vReal, SAMPLES, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    FFT.compute(vReal, vImag, SAMPLES, FFT_FORWARD);
+    FFT.complexToMagnitude(vReal, vImag, SAMPLES);
 
-    // Store current frequency values
-    previous_values[index] = frequency;
-    index = (index + 1) % NUM_VALUES_TO_AVERAGE;
-
-    // Calculate average frequency value
-    float average_frequency = 0;
-    for (int i = 0; i < NUM_VALUES_TO_AVERAGE; i++) {
-        average_frequency += previous_values[i];
-    }
-    average_frequency /= NUM_VALUES_TO_AVERAGE;
-
-    // Output the dominant frequency
-    return average_frequency;
-}
-
-void getAccelCorrected() { // Provide this portion of the code to the students.
-  int16_t ax, ay, az; // Initialize acceleration variables in the different axes. "int16_t" means 16-bit integer.
-  accel.getAcceleration(&ax, &ay, &az); // Get axis acceleration values.
-  accelXg = float(ax) / 8192 /2 ; // Conversion to g's.
-  accelYg = float(ay) / 8192 /2; // Conversion to g's.
-  accelZg = float(az) / 8192 /2 ; // Conversion to g's.
-}
-
-float lowPassFilter(float input) {
-  float output = alpha * input + (1.0 - alpha) * lastOutput;
-  lastOutput = output;
-  return output;
+    double peak = FFT.majorPeak(vReal, SAMPLES, SAMPLING_FREQUENCY);
+    return peak;
 }
