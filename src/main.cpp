@@ -2,11 +2,9 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <Adafruit_BMP280.h>
 #include <MPU6050.h>
 
 // Screen Setup
-
 #define SCREEN_WIDTH 128                        // OLED display width, in pixels
 #define SCREEN_HEIGHT 32                        // OLED display height, in pixels
 #define OLED_RESET -1                           // Reset pin # (or -1 if sharing Arduino reset pin)
@@ -25,6 +23,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 MPU6050 accel;
 float accelXg, accelYg, accelZg;
 
+float alpha = 1; // This is the smoothing factor, adjust it to your needs
+float lastOutput = 0.0; // This will hold the last output value
+
 // Button Inputs
 static const uint8_t but_u = D8;
 static const uint8_t but_m = D9;
@@ -42,7 +43,7 @@ int lastButtonState_u = HIGH;
 int lastButtonState_m = HIGH;
 
 // Flags
-#define EASTEREGGS true                         // Want a fun little suprise?
+#define EASTEREGGS false                         // Want a fun little suprise?
 
 
 // Prototypes
@@ -54,13 +55,10 @@ void menuCon(void);
 float tension(float, float, float);
 float processAudio();
 void getAccelCorrected();
+float lowPassFilter(float);
 
 void setup()
 {
-  Serial.begin(9600);
-
-  // Temp Sensor Begin
-  // dht.begin();
 
   // Button Inputs
   pinMode(but_u, INPUT_PULLUP);
@@ -195,7 +193,16 @@ void menuTension(){
     display.setCursor(13, 0);
     display.print("Measured Tension");
     display.setCursor(46, 20);
-    display.print(String(tension(processAudio(),0.0083,0.350))+"N"); //Calculate tension from analog audio input
+    float ten=lowPassFilter(tension(processAudio(),0.0083,0.350));
+    if (ten>1000){
+      display.setCursor(10, 20);
+      display.print("Freq out of Range");
+    }
+    else {
+      //Calculate tension from analog audio input
+      display.print(String(ten)+"N");
+    }
+     
     display.display();
 }
 
@@ -389,4 +396,10 @@ void getAccelCorrected() { // Provide this portion of the code to the students.
   accelXg = float(ax) / 8192 /2 ; // Conversion to g's.
   accelYg = float(ay) / 8192 /2; // Conversion to g's.
   accelZg = float(az) / 8192 /2 ; // Conversion to g's.
+}
+
+float lowPassFilter(float input) {
+  float output = alpha * input + (1.0 - alpha) * lastOutput;
+  lastOutput = output;
+  return output;
 }
