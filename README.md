@@ -1,27 +1,33 @@
 # Additive Manufacturing - Multi-Tool
 
 Current sensor loadout:
-- BMP280 Temperature sensor (for ambient)
+- GY-521 (for acceleration checking)
 - ADA1713 (microphone and op-amp)
 
 Hardware:
-- ESP32S3 XIAO
-- 3.7V 1500mAh LiPo Battery
-- 0.96" inch OLED I2C Display [RUNNING]
+- ESP32S3 XIAO (Testing with c3)
+- 0.96" inch OLED I2C Display
 
-Potential Frequency Analyzing Algos:
-- (Goertzel Filter)[https://github.com/jacobrosenthal/Goertzel/blob/master/Goertzel.cpp]
-- (Fast Hartley Transform)[https://miscircuitos.com/frequency-detection-arduino/]
+Under the Hood:
+- Frequency detection using arduinoFFT
+- Tesnion calcuated with linear density and fundamental frequency eq.
 
 Potential Addons:
-- RTC
-- Curent and voltage measurement
-- RH (Temporarily DHT-11)
+- Gcode communication
+- Chamber temperature sensor
+- VOC meter
+- Fan tester
+- Thermistor tester
+- Limit switch tester
+- Bubble level 
 
 Current predicted peak current draw: 90.11mA
 Predicted battery life: 15hrs (minimum)
 
 ### ToDo:
 1. Seperate functions into seperate files
-2. Filtering of requency data
-3. Data collection
+2. Switch to I2S mic
+3. Improve FFT sampling and low dB response
+4. Data logging
+5. Serial interface with printer
+
