@@ -55,8 +55,8 @@ int lastButtonState_u = HIGH;
 int lastButtonState_m = HIGH;
 
 // Flags
-#define EASTEREGGS false                         // Want a fun little suprise?
-
+// #define EASTEREGGS
+#define DEBUG
 
 // Prototypes
 void welcome(void);
@@ -70,6 +70,10 @@ double getDominantFrequency();
 
 void setup()
 {
+  // Serial Begin
+  #ifdef DEBUG
+    Serial.begin(9600);
+  #endif
 
   // Mic Setup
   samplingPeriod = round(1000000*(1.0/SAMPLING_FREQUENCY));
@@ -115,8 +119,7 @@ void welcome()
   display.setTextSize(2); // Draw 2X-scale text
   display.setTextColor(SSD1306_WHITE);
 
-  if (EASTEREGGS == true)
-  {
+  #ifdef EASTEREGGS
     display.setCursor(20, 0);
     display.println(F("Howdy :)"));
     display.display();
@@ -164,7 +167,7 @@ void welcome()
     display.print(F("?"));
     display.display();
     delay(500);
-  }
+#endif
 
   display.setCursor(35, 0);
   display.clearDisplay();
@@ -215,6 +218,10 @@ void menuTension(){
     }
     else {
       //Calculate tension from analog audio input
+      #ifdef DEBUG
+        Serial.println(ten);
+      #endif
+
       display.print(String(ten)+"N");
       display.setCursor(46, 20);
       display.print(String(freq)+"Hz");
@@ -234,6 +241,15 @@ void menuAmbient(){
     if ((tNow - tLast) >= interval){
       getAccelCorrected();
     }
+
+    #ifdef DEBUG
+      Serial.print(accelXg);
+      Serial.print(" ");
+      Serial.print(accelYg);
+      Serial.print(" ");
+      Serial.println(accelZg);
+    #endif
+
     display.setCursor(0, 12);
     display.print("X:"+String(abs(accelXg))+"Gs"); // Get acceleration values from MPU6050 in mm/s^2
     display.setCursor(60, 12);
