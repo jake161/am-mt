@@ -1,5 +1,4 @@
 #include "Mic.h"
-#include <arduinoFFT.h>
 
 ArduinoFFT<double> FFT = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
 
