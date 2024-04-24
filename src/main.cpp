@@ -28,8 +28,7 @@ void menuTension();
 void menuAmbient();
 void menuCon();
 
-void setup()
-{
+void setup(){
 
   // Mic Setup
   setupMic();
@@ -50,8 +49,8 @@ void setup()
   menuMain();
 }
 
-void loop()
-{
+void loop(){
+
   tNow = millis();
   menuCon();
 }
@@ -105,53 +104,42 @@ void menuAmbient(){
 }
 
 // Sub Menu Control Logic, handles navigating and re-drawing the menus
-void menuCon()
-{
+void menuCon(){
 
-  switch (subMenuState)
-  {
+  switch (subMenuState){
   case 0:
-    if ((tNow - tLast) >= interval)
-    {
+    if ((tNow - tLast) >= interval){
       int buttonState_d = digitalRead(but_d);
       int buttonState_u = digitalRead(but_u);
       int buttonState_m = digitalRead(but_m);
 
-      if (buttonState_d == lastButtonState_d && buttonState_u == lastButtonState_u && buttonState_m == lastButtonState_m)
-      {
+      if (buttonState_d == lastButtonState_d && buttonState_u == lastButtonState_u && buttonState_m == lastButtonState_m){
         // The button state hasn't changed, so don't proceed
         return;
       }
 
       tLast = tNow;
 
-      if (buttonState_d == LOW)
-      {
-        if (curPos[1] + 10 <= 20 && curPos[1] != 20)
-        {
+      if (buttonState_d == LOW){
+        if (curPos[1] + 10 <= 20 && curPos[1] != 20){
           curPos[1] = curPos[1] + 10;
           menuMain();
         }
       }
 
-      if (buttonState_u == LOW)
-      {
-        if (curPos[1] - 10 >= 10 && curPos[1] != 10)
-        {
+      if (buttonState_u == LOW){
+        if (curPos[1] - 10 >= 10 && curPos[1] != 10){
           curPos[1] = curPos[1] - 10;
           menuMain();
         }
       }
 
-      if (buttonState_m == LOW)
-      {
-        if (curPos[1] == 10)
-        {
+      if (buttonState_m == LOW){
+        if (curPos[1] == 10){
           subMenuState = 1;
         }
 
-        if (curPos[1] == 20)
-        {
+        if (curPos[1] == 20){
           subMenuState = 2;
         }
       }
@@ -166,8 +154,7 @@ void menuCon()
     
     menuTension();
 
-    if ((tNow - tLast) >= interval)
-    {
+    if ((tNow - tLast) >= interval){
       int buttonState = digitalRead(but_m);
       if (buttonState == lastButtonState_m){
         return;
@@ -175,8 +162,7 @@ void menuCon()
 
       tLast = tNow;
       lastButtonState_m = buttonState;
-      if (digitalRead(but_m) == LOW) // Debounce this
-      {
+      if (digitalRead(but_m) == LOW){
         menuMain(); // sends back to main menu
       }
     }
@@ -186,18 +172,15 @@ void menuCon()
 
     menuAmbient();
 
-    if ((tNow - tLast) >= interval)
-    {
+    if ((tNow - tLast) >= interval){
       int buttonState = digitalRead(but_m);
-      if (buttonState == lastButtonState_m)
-      {
+      if (buttonState == lastButtonState_m){
         return;
       }
 
       tLast = tNow;
       lastButtonState_m = buttonState;
-      if (digitalRead(but_m) == LOW) // Debounce this
-      {
+      if (digitalRead(but_m) == LOW){
         menuMain(); // sends back to main menu
       }
     }
