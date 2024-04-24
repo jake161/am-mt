@@ -28,7 +28,12 @@ void menuTension();
 void menuAmbient();
 void menuCon();
 
-void setup(){
+void setup()
+{
+  // Serial Begin
+  #ifdef DEBUG
+    Serial.begin(9600);
+  #endif
 
   // Mic Setup
   setupMic();
@@ -75,6 +80,10 @@ void menuTension(){
     }
     else {
       //Calculate tension from analog audio input
+      #ifdef DEBUG
+        Serial.println(ten);
+      #endif
+
       display.print(String(ten)+"N");
       display.setCursor(46, 20);
       display.print(String(freq)+"Hz");
@@ -94,6 +103,15 @@ void menuAmbient(){
     if ((tNow - tLast) >= interval){
       getAccelCorrected();
     }
+
+    #ifdef DEBUG
+      Serial.print(accelXg);
+      Serial.print(" ");
+      Serial.print(accelYg);
+      Serial.print(" ");
+      Serial.println(accelZg);
+    #endif
+
     display.setCursor(0, 12);
     display.print("X:"+String(abs(accelXg))+"Gs"); // Get acceleration values from MPU6050 in mm/s^2
     display.setCursor(60, 12);
