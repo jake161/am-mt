@@ -94,7 +94,7 @@ void menuTension(){
 }
 
 // Draw the Ambient Temp Sub menu
-void menuAmbient(){
+void menuAccel(){
     subMenuState = 2;
     //Serial.println(subMenuState);
     display.clearDisplay();
@@ -188,7 +188,7 @@ void menuCon(){
 
   case 2:
 
-    menuAmbient();
+    menuAccel();
 
     if ((tNow - tLast) >= interval){
       int buttonState = digitalRead(but_m);
