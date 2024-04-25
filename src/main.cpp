@@ -32,27 +32,29 @@ void menuCon();
 
 void setup()
 {
+  // Screen Begin
+  screenSetup();
+
   // Serial Begin
   #ifdef DEBUG
     Serial.begin(9600);
   #endif
 
+  // Call menu welcom screen
+  welcome();
+
   // Mic Setup
   setupMic();
+  
+  // Accelerometer Begin
+  setupAccel();
 
   // Button Inputs
   pinMode(but_u, INPUT_PULLUP);
   pinMode(but_m, INPUT_PULLUP);
   pinMode(but_d, INPUT_PULLUP);
 
-  // Accelerometer Begin
-  setupAccel();
-
-  // Screen Begin
-  screenSetup();
-
-  // Call menu welcom screen
-  welcome();
+  // Draw Main Menu
   menuMain();
 }
 

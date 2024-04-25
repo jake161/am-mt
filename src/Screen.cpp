@@ -75,7 +75,7 @@ void welcome()
   display.setTextSize(1);
   display.print(F(" Additive Manufctrng\n      Multi-Tool")); // Add a glitching text animation for EASTEREGGS
   display.display();
-  delay(2000);
+  //delay(2000);
 }
 
 /*
