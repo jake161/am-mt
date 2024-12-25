@@ -5,8 +5,7 @@
 #include <Tension.h>
 
 // Flags
-// #define EASTEREGGS
-// #define DEBUG
+#define DEBUG
 
 // Button Inputs
 static const uint8_t but_u = D8;
@@ -25,7 +24,8 @@ int lastButtonState_m = HIGH;
 
 // Prototypes
 void menuTension();
-void menuAmbient();
+void menuAccel();
+void splash();
 void menuCon();
 
 
@@ -37,17 +37,17 @@ void setup()
 
   // Serial Begin
   #ifdef DEBUG
-    Serial.begin(9600);
+    Serial.begin(4800);
   #endif
 
   // Call menu welcom screen
   welcome();
 
   // Mic Setup
-  setupMic();
+  //setupMic();
   
   // Accelerometer Begin
-  setupAccel();
+  //setupAccel();
 
   // Button Inputs
   pinMode(but_u, INPUT_PULLUP);
@@ -105,7 +105,7 @@ void menuAccel(){
     display.setCursor(25, 0);
     display.print("Acceleration");
     if ((tNow - tLast) >= interval){
-      getAccelCorrected();
+      //getAccelCorrected();
     }
 
     #ifdef DEBUG
@@ -123,6 +123,16 @@ void menuAccel(){
     display.setCursor(0, 25);
     display.print("Z:"+String(abs(accelZg))+"Gs");
     display.display();
+}
+
+//Shows the splash screen (currently on 128x64 is supported)
+void splash(){
+
+  subMenuState = 2;
+  
+  display.clearDisplay();
+  display.drawXBitmap(0,0,JAB_bits,JAB_width,JAB_height,WHITE);
+  display.display();
 }
 
 // Sub Menu Control Logic, handles navigating and re-drawing the menus
@@ -143,7 +153,7 @@ void menuCon(){
       tLast = tNow;
 
       if (buttonState_d == LOW){
-        if (curPos[1] + 10 <= 20 && curPos[1] != 20){
+        if (curPos[1] + 10 <= 30 && curPos[1] != 30){
           curPos[1] = curPos[1] + 10;
           menuMain();
         }
@@ -163,6 +173,10 @@ void menuCon(){
 
         if (curPos[1] == 20){
           subMenuState = 2;
+        }
+        
+        if (curPos[1] == 30){
+          subMenuState = 3;
         }
       }
 
@@ -207,5 +221,25 @@ void menuCon(){
       }
     }
     break;
+
+  case 3:
+  
+    splash();
+    Serial.println(curPos[1]);
+
+    if ((tNow - tLast) >= interval){
+      int buttonState = digitalRead(but_m);
+      if (buttonState == lastButtonState_m){
+        return;
+      }
+
+      tLast = tNow;
+      lastButtonState_m = buttonState;
+      if (digitalRead(but_m) == LOW){
+        menuMain(); // sends back to main menu
+      }
+    }
+    break;
+
   }
 }
