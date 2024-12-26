@@ -9,8 +9,8 @@
 // #define DEBUG
 
 // Button Inputs
-static const uint8_t but_u = D9;
-static const uint8_t but_m = D8;
+static const uint8_t but_u = D8;
+static const uint8_t but_m = D9;
 static const uint8_t but_d = D10;
 
 // Debouncing
