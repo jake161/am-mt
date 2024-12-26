@@ -128,7 +128,7 @@ void menuAccel(){
 //Shows the splash screen (currently on 128x64 is supported)
 void splash(){
 
-  subMenuState = 2;
+  subMenuState = 3;
   
   display.clearDisplay();
   display.drawXBitmap(0,0,JAB_bits,JAB_width,JAB_height,WHITE);
