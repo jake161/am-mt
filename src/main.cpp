@@ -9,8 +9,8 @@
 // #define DEBUG
 
 // Button Inputs
-static const uint8_t but_u = D8;
-static const uint8_t but_m = D9;
+static const uint8_t but_u = D9;
+static const uint8_t but_m = D8;
 static const uint8_t but_d = D10;
 
 // Debouncing
@@ -25,7 +25,7 @@ int lastButtonState_m = HIGH;
 
 // Prototypes
 void menuTension();
-void menuAmbient();
+void menuAccel();
 void menuCon();
 
 
@@ -47,7 +47,7 @@ void setup()
   setupMic();
   
   // Accelerometer Begin
-  setupAccel();
+  //setupAccel();
 
   // Button Inputs
   pinMode(but_u, INPUT_PULLUP);
